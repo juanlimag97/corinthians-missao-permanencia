@@ -44,6 +44,7 @@ import {
   type RoundOutcome,
   type Selection,
 } from "@/lib/engine";
+import { track } from "@/lib/track";
 
 type Phase = "intro" | "escalacao" | "jogo" | "fim";
 
@@ -67,12 +68,17 @@ export function Game() {
   const finished = pending !== null && minute >= pending.match.finalMinute;
 
   useEffect(() => {
+    track("visit");
+  }, []);
+
+  useEffect(() => {
     if (phase !== "jogo" || finished) return;
     const id = setInterval(() => setMinute((m) => m + 1), TICK_MS);
     return () => clearInterval(id);
   }, [phase, finished]);
 
   function start() {
+    track("start");
     setGame(newGame());
     setSelection(EMPTY_SELECTION);
     setPending(null);
@@ -95,7 +101,9 @@ export function Game() {
     setGame(pending.state);
     setPending(null);
     setSelection(EMPTY_SELECTION);
-    setPhase(pending.state.roundIndex >= TOTAL_ROUNDS ? "fim" : "escalacao");
+    const done = pending.state.roundIndex >= TOTAL_ROUNDS;
+    if (done) track("finish");
+    setPhase(done ? "fim" : "escalacao");
   }
 
   if (phase === "intro" || !game) return <Intro onStart={start} />;

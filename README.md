@@ -28,6 +28,8 @@ Para atualizar depois de uma rodada real, edite `INITIAL_STANDINGS`,
   rodadas restantes
 - `lib/engine.ts` — simulação, narração e a regra do rebaixamento
 - `app/game.tsx` — interface do jogo
+- `app/painel/` — painel com quantas pessoas jogaram
+- `lib/stats.ts` e `app/api/track/route.ts` — contagem de visitas e partidas
 
 ## Rodar localmente
 
@@ -44,3 +46,20 @@ Abra http://localhost:3000.
 2. Importe este repositório. A Vercel detecta Next.js sozinha — não
    precisa de variáveis de ambiente.
 3. Clique em **Deploy**.
+
+## Painel de acessos
+
+Em `/painel` (ex.: `seu-jogo.vercel.app/painel`) dá pra ver quantas pessoas
+jogaram, quantas partidas foram iniciadas, quantas chegaram até a 38ª
+rodada e o gráfico dos últimos 14 dias. Para ativar, na Vercel:
+
+1. **Storage → Create Database → Upstash (Redis)**, plano gratuito, e
+   conecte ao projeto. As variáveis `KV_REST_API_URL` e `KV_REST_API_TOKEN`
+   são criadas sozinhas.
+2. **Settings → Environment Variables**: crie `PAINEL_SENHA` com a senha
+   do painel.
+3. Faça um novo deploy. A contagem começa a partir daí.
+
+Cada pessoa é identificada por um código anônimo salvo no navegador (sem
+nome, e-mail ou IP). Sem o banco configurado, o jogo funciona normalmente e
+só não conta.
