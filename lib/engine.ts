@@ -12,6 +12,7 @@ import {
   type Sector,
   type Standing,
 } from "./data";
+import { narrate, type MatchEvent } from "./narration";
 
 export type Outcome = "W" | "D" | "L";
 
@@ -19,8 +20,7 @@ export type Outcome = "W" | "D" | "L";
 export type Fixture = { homeId: string; awayId: string; late?: boolean };
 export type MatchResult = Fixture & { hg: number; ag: number };
 
-export type EventKind = "goal-cor" | "goal-opp" | "drama" | "card" | "info";
-export type MatchEvent = { minute: number; text: string; kind: EventKind };
+export type { EventKind, MatchEvent } from "./narration";
 
 export type CorMatch = {
   round: number;
@@ -42,6 +42,8 @@ export type GameState = {
   options: Record<Sector, Player[]>;
   history: CorMatch[];
   lastRoundResults: MatchResult[];
+  // Frases de narração já usadas na campanha, para não repetir.
+  usedLines: string[];
 };
 
 export const TOTAL_ROUNDS = ROUNDS.length;
@@ -50,9 +52,6 @@ const TEAMS_ABOVE_NEEDED = TEAMS.length - RELEGATION_SPOTS;
 
 // ---------- utilidades ----------
 
-const rand = (min: number, max: number) =>
-  min + Math.floor(Math.random() * (max - min + 1));
-const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v: number, min: number, max: number) =>
   Math.min(max, Math.max(min, v));
 
@@ -194,6 +193,7 @@ export function newGame(): GameState {
     options: drawOptions(),
     history: [],
     lastRoundResults: [],
+    usedLines: [],
   };
 }
 
@@ -328,13 +328,17 @@ export function playRound(state: GameState, selection: Selection): RoundOutcome 
   const legends = (Object.values(selection).filter(Boolean) as string[]).map(
     (id) => findLegend(id)!.name
   );
-  const { events, finalMinute } = narrate(
-    chosen.cor,
+  const used = new Set(state.usedLines);
+  const { events, finalMinute } = narrate({
+    corGoals: home ? chosen.cor.hg : chosen.cor.ag,
+    oppGoals: home ? chosen.cor.ag : chosen.cor.hg,
     home,
     opponentId,
+    venueIn: ROUNDS[state.roundIndex].venueIn,
     lineup,
-    wanted !== chosen.outcome
-  );
+    fate: wanted !== chosen.outcome,
+    used,
+  });
 
   const match: CorMatch = {
     round: state.roundIndex,
@@ -356,122 +360,9 @@ export function playRound(state: GameState, selection: Selection): RoundOutcome 
       options: drawOptions(state.options),
       history: [...state.history, match],
       lastRoundResults: [chosen.cor, ...chosen.others],
+      usedLines: [...used],
     },
   };
-}
-
-// ---------- narração ----------
-
-const SCORER_WEIGHT: Record<string, number> = {
-  ATA: 4,
-  MEI: 2.4,
-  VOL: 1.1,
-  ZAG: 0.5,
-  LD: 0.5,
-  LE: 0.5,
-  GOL: 0,
-};
-
-function pickScorer(lineup: Record<string, Player>): Player {
-  const players = Object.values(lineup);
-  return weighted(
-    players.map((p): [Player, number] => [
-      p,
-      SCORER_WEIGHT[p.pos] * Math.max(1, p.rating - 60) * (p.legend ? 1.4 : 1),
-    ])
-  );
-}
-
-const GOAL_LINES = [
-  (n: string) => `GOOOL DO TIMÃO! ${n} estufa a rede!`,
-  (n: string) => `É GOL! ${n} bate cruzado, sem chance pro goleiro!`,
-  (n: string) => `${n} de cabeça! A Fiel explode!`,
-  (n: string) => `Golaço de ${n}! Pintura!`,
-];
-
-const FLAVOR = [
-  "A Fiel canta: “Aqui tem um bando de louco!”",
-  "Jogo truncado no meio-campo.",
-  "Bola na trave! Quase!",
-  "Cartão amarelo para o Corinthians por reclamação.",
-  "O técnico pede calma à beira do campo.",
-  "Chuva forte cai sobre o gramado.",
-];
-
-function narrate(
-  result: MatchResult,
-  home: boolean,
-  opponentId: string,
-  lineup: Record<string, Player>,
-  zebra: boolean
-): { events: MatchEvent[]; finalMinute: number } {
-  const opp = TEAM_BY_ID[opponentId].name;
-  const corGoals = home ? result.hg : result.ag;
-  const oppGoals = home ? result.ag : result.hg;
-  const events: MatchEvent[] = [];
-  const star = Object.values(lineup)
-    .filter((p) => p.pos !== "GOL")
-    .sort((a, b) => b.rating - a.rating)[0];
-  const defender = pick(
-    Object.values(lineup).filter((p) => ["ZAG", "LD", "LE"].includes(p.pos))
-  );
-
-  const stoppage = zebra ? rand(7, 11) : rand(2, 5);
-  const finalMinute = 90 + stoppage;
-
-  // No "destino", o Timão abre vantagem cedo e os gols rivais vêm no fim.
-  const corMinutes = Array.from({ length: corGoals }, () =>
-    zebra ? rand(4, 70) : rand(2, 89)
-  );
-  const oppMinutes = Array.from({ length: oppGoals }, () =>
-    zebra ? rand(74, finalMinute) : rand(2, 89)
-  );
-
-  corMinutes.forEach((minute) => {
-    const scorer = pickScorer(lineup);
-    events.push({ minute, kind: "goal-cor", text: pick(GOAL_LINES)(scorer.name) });
-  });
-
-  let ownGoalUsed = false;
-  oppMinutes.forEach((minute) => {
-    if (zebra && !ownGoalUsed && minute >= 80) {
-      ownGoalUsed = true;
-      events.push({
-        minute,
-        kind: "goal-opp",
-        text: `Gol contra bizarro de ${defender.name}. A bola desvia na canela e entra.`,
-      });
-      return;
-    }
-    events.push({ minute, kind: "goal-opp", text: `Gol do ${opp}.` });
-  });
-
-  if (zebra) {
-    const dramas = [
-      `VAR anula gol de ${star.name} por um impedimento milimétrico.`,
-      `Pênalti para o Timão! ${star.name} bate... e isola.`,
-      `${star.name} sente a coxa e sai de maca.`,
-      `Apagão no estádio. Jogo parado por 14 minutos.`,
-      `${star.name} chuta, a bola bate nas duas traves e sai.`,
-    ];
-    shuffle(dramas)
-      .slice(0, 2)
-      .forEach((text) => events.push({ minute: rand(70, 89), kind: "drama", text }));
-    events.push({
-      minute: 90,
-      kind: "drama",
-      text: `O árbitro dá ${stoppage} minutos de acréscimo. Ninguém entende de onde.`,
-    });
-  } else {
-    shuffle(FLAVOR)
-      .slice(0, rand(1, 2))
-      .forEach((text) => events.push({ minute: rand(10, 85), kind: "info", text }));
-  }
-
-  events.sort((a, b) => a.minute - b.minute);
-  events.unshift({ minute: 0, kind: "info", text: "Rola a bola!" });
-  events.push({ minute: finalMinute, kind: "info", text: "Fim de jogo." });
-  return { events, finalMinute };
 }
 
 export function corScore(m: CorMatch) {

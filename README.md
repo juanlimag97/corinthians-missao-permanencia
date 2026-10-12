@@ -26,7 +26,9 @@ Para atualizar depois de uma rodada real, edite `INITIAL_STANDINGS`,
 
 - `lib/data.ts` — titulares atuais, lendas, times, tabela inicial e
   rodadas restantes
-- `lib/engine.ts` — simulação, narração e a regra do rebaixamento
+- `lib/engine.ts` — simulação e a regra do rebaixamento
+- `lib/narration.ts` — todas as frases da narração (é só acrescentar
+  frases nas listas para ter mais variedade)
 - `app/game.tsx` — interface do jogo
 - `app/painel/` — painel com quantas pessoas jogaram
 - `lib/stats.ts` e `app/api/track/route.ts` — contagem de visitas e partidas

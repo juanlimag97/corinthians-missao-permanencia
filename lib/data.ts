@@ -104,6 +104,8 @@ export type Round = {
   // Jogo do Corinthians: data e estádio.
   corDate: string;
   venue: string;
+  // "na Neo Química Arena", "no Morumbis" — para a narração.
+  venueIn: string;
   matches: [home: string, away: string][];
   // Jogos adiados de rodadas anteriores, simulados junto com esta rodada.
   late?: [home: string, away: string][];
@@ -115,6 +117,7 @@ export const ROUNDS: Round[] = [
     dates: "16 a 19/10",
     corDate: "seg, 19/10",
     venue: "Neo Química Arena",
+    venueIn: "na Neo Química Arena",
     matches: [
       ["cor", "vit"], ["mir", "int"], ["bot", "cha"], ["cam", "ctb"], ["cap", "pal"],
       ["spa", "vas"], ["flu", "san"], ["gre", "cru"], ["bah", "fla"], ["rem", "rbb"],
@@ -125,6 +128,7 @@ export const ROUNDS: Round[] = [
     dates: "23 a 26/10",
     corDate: "sáb, 24/10",
     venue: "São Januário",
+    venueIn: "em São Januário",
     matches: [
       ["vas", "cor"], ["cru", "rem"], ["mir", "spa"], ["int", "bot"], ["vit", "cap"],
       ["pal", "rbb"], ["cha", "flu"], ["san", "bah"], ["ctb", "gre"], ["fla", "cam"],
@@ -135,6 +139,7 @@ export const ROUNDS: Round[] = [
     dates: "28 a 30/10",
     corDate: "sex, 30/10",
     venue: "Neo Química Arena",
+    venueIn: "na Neo Química Arena",
     matches: [
       ["cor", "mir"], ["flu", "int"], ["san", "pal"], ["rbb", "cha"], ["bah", "spa"],
       ["rem", "bot"], ["cam", "cru"], ["ctb", "vit"], ["vas", "fla"], ["gre", "cap"],
@@ -145,6 +150,7 @@ export const ROUNDS: Round[] = [
     dates: "02 a 06/11",
     corDate: "qua, 04/11",
     venue: "Morumbis",
+    venueIn: "no Morumbis",
     matches: [
       ["spa", "cor"], ["rbb", "san"], ["cha", "mir"], ["int", "ctb"], ["fla", "gre"],
       ["cap", "vas"], ["bot", "cam"], ["pal", "rem"], ["cru", "bah"], ["vit", "flu"],
@@ -155,6 +161,7 @@ export const ROUNDS: Round[] = [
     dates: "18 e 19/11",
     corDate: "qua, 18/11",
     venue: "Neo Química Arena",
+    venueIn: "na Neo Química Arena",
     matches: [
       ["cor", "bot"], ["fla", "cap"], ["vas", "int"], ["spa", "flu"], ["mir", "cam"],
       ["cru", "pal"], ["gre", "bah"], ["ctb", "san"], ["vit", "rbb"], ["rem", "cha"],
@@ -164,6 +171,7 @@ export const ROUNDS: Round[] = [
     dates: "21 a 23/11",
     corDate: "dom, 22/11",
     venue: "Arena MRV",
+    venueIn: "na Arena MRV",
     matches: [
       ["cam", "cor"], ["flu", "mir"], ["bot", "spa"], ["san", "gre"], ["pal", "fla"],
       ["rbb", "vas"], ["int", "vit"], ["cap", "rem"], ["bah", "ctb"], ["cha", "cru"],
@@ -173,6 +181,7 @@ export const ROUNDS: Round[] = [
     dates: "28 e 29/11",
     corDate: "dom, 29/11",
     venue: "Neo Química Arena",
+    venueIn: "na Neo Química Arena",
     matches: [
       ["cor", "gre"], ["flu", "cru"], ["bot", "bah"], ["spa", "rem"], ["mir", "cap"],
       ["cam", "vas"], ["int", "rbb"], ["ctb", "fla"], ["vit", "san"], ["cha", "pal"],
@@ -182,6 +191,7 @@ export const ROUNDS: Round[] = [
     dates: "02/12",
     corDate: "qua, 02/12",
     venue: "Baenão",
+    venueIn: "no Baenão",
     matches: [
       ["rem", "cor"], ["fla", "cha"], ["vas", "vit"], ["san", "bot"], ["pal", "ctb"],
       ["rbb", "flu"], ["cru", "int"], ["gre", "mir"], ["cap", "spa"], ["bah", "cam"],
